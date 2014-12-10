@@ -16,19 +16,31 @@ type In []string
 // Bash executes a bash script (string) with an option to set
 // the working directory.
 func Bash(script string, wd ...In) error {
-	_, err := bash(false, script, wd)
+	_, err := bash(false, false, script, wd)
 	return err
 }
 
 // BashOutput is the same as Bash and it captures stdout and stderr.
 func BashOutput(script string, wd ...In) (string, error) {
-	return bash(true, script, wd)
+	return bash(true, false, script, wd)
+}
+
+// BashSilent executes a bash script (string) with an option to set
+// the working directory. Output by the program is not written to stdout.
+func BashSilent(script string, wd ...In) error {
+	_, err := bash(false, true, script, wd)
+	return err
+}
+
+// BashSilentOutput is the same as BashSilent and it captures stdout and stderr.
+func BashSilentOutput(script string, wd ...In) (string, error) {
+	return bash(true, true, script, wd)
 }
 
 // BashVerbose prints the script that is being executed and it's output (stdout, stderr).
 func BashVerbose(script string, wd ...In) error {
 	fmt.Printf("$ %s\n", script)
-	output, err := bash(true, script, wd)
+	_, err := bash(false, false, script, wd)
 	return err
 }
 
@@ -36,7 +48,7 @@ func BashVerbose(script string, wd ...In) error {
 // Afterwards, the output is returned as string.
 func BashVerboseOutput(script string, wd ...In) (string, error) {
 	fmt.Printf("$ %s\n", script)
-	output, err := bash(true, script, wd)
+	output, err := bash(true, false, script, wd)
 	return output, err
 }
 
@@ -85,7 +97,7 @@ func Start(commandstr string, wd ...In) error {
 
 // Bash executes a bash string. Use backticks for multiline. To execute as shell script,
 // use Run("bash script.sh")
-func bash(captureOutput bool, script string, wd []In) (output string, err error) {
+func bash(captureOutput bool, silentOutput bool, script string, wd []In) (output string, err error) {
 	dir, err := getWd(wd)
 	if err != nil {
 		return
@@ -96,6 +108,7 @@ func bash(captureOutput bool, script string, wd []In) (output string, err error)
 		argv:          []string{"-c", script},
 		wd:            dir,
 		captureOutput: captureOutput,
+		silentOutput:  silentOutput,
 		commandstr:    script,
 	}
 

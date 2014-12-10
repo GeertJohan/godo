@@ -24,6 +24,8 @@ type command struct {
 	wd string
 	// whether to capture output
 	captureOutput bool
+	// don't send output to logs
+	silentOutput bool
 	// the output recorder
 	recorder bytes.Buffer
 }
@@ -37,7 +39,10 @@ func (gcmd *command) toExecCmd() (cmd *exec.Cmd, err error) {
 	cmd.Env = effectiveEnv(gcmd.env)
 	cmd.Stdin = os.Stdin
 
-	if gcmd.captureOutput {
+	if gcmd.captureOutput && gcmd.silentOutput {
+		cmd.Stdout = &gcmd.recorder
+		cmd.Stderr = &gcmd.recorder
+	} else if gcmd.captureOutput {
 		outWrapper := newFileWrapper(os.Stdout, &gcmd.recorder, "")
 		errWrapper := newFileWrapper(os.Stderr, &gcmd.recorder, ansi.ColorCode("red+b"))
 		cmd.Stdout = outWrapper
